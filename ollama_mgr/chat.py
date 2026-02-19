@@ -356,6 +356,9 @@ def _build_status_panel(
     header.append(f"Exchange {exchange_num}/?", style="dim")
     header.append(f"  |  Elapsed: {_format_timestamp(elapsed)}", style="dim")
 
+    if current_player:
+        header.append(f"  |  Now: {current_player}", style="bold yellow")
+
     if paused:
         header.append("  |  [yellow]PAUSED (p = resume)[/]", style="yellow bold")
 
@@ -442,8 +445,6 @@ def run_turn_chat(
         holder["current_player"] = current_player_name
         holder["skipped"] = False
         holder["submit_partial"] = False
-
-        console.print(f"\n[cyan]Exchange {exchange_num}:[/] {current_player_name} is responding...")
 
         elapsed = time.perf_counter() - start_time
 
