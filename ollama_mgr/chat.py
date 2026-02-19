@@ -407,7 +407,10 @@ def run_turn_chat(
     conversation_log: list[dict] = []
     was_quit = False
 
+    SYSTEM_PROMPT = "You are a helpful assistant."
+
     messages: list[dict] = [
+        {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": initial_prompt}
     ]
 
@@ -445,6 +448,8 @@ def run_turn_chat(
         holder["current_player"] = current_player_name
         holder["skipped"] = False
         holder["submit_partial"] = False
+
+        console.print(f"[dim]Starting {current_player_name}...[/]")
 
         elapsed = time.perf_counter() - start_time
 
