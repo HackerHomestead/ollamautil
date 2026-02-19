@@ -7,6 +7,7 @@ A Python tool that interacts with the [Ollama](https://ollama.com) API to:
 - **Run** an interactive benchmark: pick models (checkboxes), run one at a time with live streaming output, optional pause between models, then optionally delete failed models or run again
 - **Benchmark** every model (batch test + performance measure) with environment and `nvidia-smi` sampling
 - **Prune** (delete) models by name
+- **Chat API support** – Automatically uses `/api/chat` for models that expect chat-style input (e.g., DeepSeek-R1)
 
 Primary use case: test downloaded Ollama models, compare outputs and speed, and remove ones that fail or you no longer want.
 

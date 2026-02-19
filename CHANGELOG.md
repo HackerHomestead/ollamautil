@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Chat API support** – Added `chat()` method to `OllamaClient` for chat completion. The `generate()` method now accepts `use_chat_api=True` to route prompts via `/api/chat` instead of `/api/generate`. Benchmark automatically detects models that need chat format (e.g., DeepSeek-R1) based on model name prefixes.
 - **Interactive run (`run`)**
   - Checkbox model selection; run one model at a time with live streaming output
   - Live output: model response streams in real time and is rendered as Markdown (code blocks, **bold**, lists, etc.)
