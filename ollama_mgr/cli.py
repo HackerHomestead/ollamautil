@@ -142,7 +142,7 @@ def main() -> int:
         help="Player 2 model name (right panel); if omitted, you will be prompted",
     )
     cp.add_argument(
-        "--prompt",
+        "--prompt", "-p",
         default=None,
         metavar="PROMPT",
         help="Initial prompt to start the conversation; if omitted, you will be prompted",

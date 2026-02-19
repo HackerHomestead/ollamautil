@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Turn-based chat (`chat`)** – Two models debate each other in a split-view UI with live streaming output. Select Player 1 (left) and Player 2 (right) models interactively or via CLI flags. Each model's response feeds into the other's next turn.
   - Split-view panel showing both models' responses side-by-side
   - `--player1` / `-1` and `--player2` / `-2` for model selection
-  - `--prompt` for initial prompt (or prompted if omitted)
+  - `--prompt` / `-p` for initial prompt (or prompted if omitted)
   - `--exchanges` / `-e` for number of turns per model (default: 5)
   - `--timeout` / `-t` for timeout in seconds (default: 3600 = 1 hour)
   - Controls: **p** = pause/resume, **s** = skip next turn, **q** = quit
