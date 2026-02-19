@@ -4,17 +4,17 @@ A Python tool that interacts with the [Ollama](https://ollama.com) API to:
 
 - **Check** that Ollama is running
 - **List** all installed models
-- **Benchmark** every model (test run + quick performance measure)
-- **Report** what worked and what didn’t, plus environment (CPU, memory, GPU) and `nvidia-smi` usage sampled every 10 seconds
-- **Prune** (delete) models that don’t work or you no longer want
+- **Run** an interactive benchmark: pick models (checkboxes), run one at a time with live streaming output, optional pause between models, then optionally delete failed models or run again
+- **Benchmark** every model (batch test + performance measure) with environment and `nvidia-smi` sampling
+- **Prune** (delete) models by name
 
-Primary use case: automatically test downloaded Ollama models and remove ones that fail or are too slow.
+Primary use case: test downloaded Ollama models, compare outputs and speed, and remove ones that fail or you no longer want.
 
 ## Requirements
 
 - Python 3.9+
 - [Ollama](https://ollama.com) installed and running (e.g. `ollama serve`)
-- Optional: NVIDIA GPU and `nvidia-smi` for GPU/env stats in the report
+- Optional: NVIDIA GPU and `nvidia-smi` on PATH for GPU/env stats (only used if present)
 
 ## Install
 
@@ -51,23 +51,37 @@ python -m ollama_mgr.cli check
 python -m ollama_mgr.cli list
 ```
 
-### Interactive run (select models, then benchmark one at a time)
+### Interactive run (recommended)
 
-Pick models with a **checkbox menu**, then run each with a test prompt. Verbose live output so you can see progress when models are slow.
+Pick models with a **checkbox menu**, then run each with a test prompt. You see **live streaming output** from each model (with markdown rendered: code blocks, bold, lists, etc.), overall run time, and environment (CPU, memory, GPU). After the run you can optionally delete failed models (checkbox) and choose to run again.
 
 ```bash
 python -m ollama_mgr.cli run
 ```
 
-- Default prompt: `write hello world in lisp`
-- Custom prompt: `python -m ollama_mgr.cli run --prompt "Your prompt"`
-- Non-interactive (no checkboxes): `python -m ollama_mgr.cli run --models "model1,model2"`
-- Write results to a markdown file (prompt + each model’s stats and output, for comparison): `python -m ollama_mgr.cli run -o report.md`
-- Suppress live UI (minimal progress only): `python -m ollama_mgr.cli run --quiet` or `-q`
+**Options:**
+
+- `--prompt "Your prompt"` – test prompt (default: you’re prompted; or `write hello world in lisp` when selecting models)
+- `--models "model1,model2"` / `-m` – run these models (no checkbox)
+- `--report FILE` / `-o FILE` – write a markdown report (env + prompt + each model’s stats and output; output is written as markdown so viewers render it)
+- `--pause SECONDS` / `-p SECONDS` – pause between models with countdown (default: 15). Use `0` to disable.
+- `--quiet` / `-q` – minimal progress (no live UI)
+
+**During a model run:**
+
+- **n** – skip to next model (current run is marked “cut short by user” in results)
+- **p** – pause the display (freeze output so you can read); press **p** again to resume
+
+**During the delay between models:**
+
+- **n** – skip the delay and start the next model
+- **p** – pause the countdown; **p** again to resume
+
+The results table is sorted by status (passed first), then speed, then tokens. At the end you can select which failed models to delete (checkboxes) and choose whether to run again.
 
 ### Benchmark all models and show report
 
-Runs each model with a short test prompt, records timing and tokens/sec, captures CPU/memory/GPU config and runs `nvidia-smi` at least every 10 seconds during the run. Report is printed to stdout.
+Runs each model with a short test prompt, records timing and tokens/sec, captures CPU/memory/GPU and runs `nvidia-smi` every N seconds during the run (only if `nvidia-smi` is on PATH). Report is printed to stdout.
 
 ```bash
 python -m ollama_mgr.cli benchmark
@@ -81,8 +95,8 @@ python -m ollama_mgr.cli benchmark --report report.md
 
 Options:
 
-- `--prompt "Your test prompt"` – prompt used for each model (default: `Say exactly: OK`)
-- `--nvidia-smi-interval 10` – run `nvidia-smi` every N seconds (default: 10)
+- `--prompt "Your test prompt"` – prompt for each model (default: `Say exactly: OK`)
+- `--nvidia-smi-interval N` – sample `nvidia-smi` every N seconds (default: 10)
 - `--report FILE` / `-o FILE` – write report to `FILE`
 
 ### Prune (delete) models
@@ -96,10 +110,16 @@ python -m ollama_mgr.cli prune --models "llama2:7b,codellama"
 
 ## Report contents
 
-The benchmark report includes:
+**Interactive run report** (with `-o`):
 
-1. **Environment** – CPU (cores, frequency, brand), RAM (total/available/percent), GPU(s) (name, memory, driver), platform
-2. **nvidia-smi usage during run** – one line per sample (every 10s) plus raw output
-3. **Model results** – passed (with elapsed time and tokens/sec) and failed (with error message)
+- Environment (CPU, memory, GPU(s), platform)
+- Prompt
+- Per model: status, time, tokens, speed; output as markdown (so code blocks and formatting render in viewers). If a run was cut short by user, that is noted.
 
-Use this to decide which models to prune (e.g. failed or too slow), then run `prune` with those names.
+**Benchmark report** (batch):
+
+- Environment – CPU (cores, frequency, brand), RAM (total/available/percent), GPU(s) (name, memory, driver), platform
+- nvidia-smi usage during run – one line per sample (only if `nvidia-smi` is available)
+- Model results – passed (elapsed time, tokens/sec) and failed (error message)
+
+Use this to decide which models to prune, then run `prune` with those names.
