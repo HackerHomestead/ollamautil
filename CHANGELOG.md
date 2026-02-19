@@ -28,4 +28,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Notes
 
-- Future: support for vision/image models (images or files as input) is planned; see TODOs in code.
+- **Future:** Support for vision/image models (images or files as input) is planned; see TODOs in code.
+- **Future:** Use SQLite to retain all results for later recall and display.
+- **Future:** Turn-based chat between models: pick one or more models, give each an initial prompt, then have them send responses to each other in turns.

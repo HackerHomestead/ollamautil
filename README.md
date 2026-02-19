@@ -123,3 +123,9 @@ python -m ollama_mgr.cli prune --models "llama2:7b,codellama"
 - Model results – passed (elapsed time, tokens/sec) and failed (error message)
 
 Use this to decide which models to prune, then run `prune` with those names.
+
+## Future / planned
+
+- **Vision/image models** – Support for images or files as input (see TODOs in code).
+- **SQLite storage** – Retain all run results in SQLite for later recall and display.
+- **Turn-based chat** – Chat between models: choose one or more models, give each an initial prompt, then have them send responses to each other in turns.
