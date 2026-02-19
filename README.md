@@ -69,7 +69,7 @@ python -m ollama_mgr.cli run
 
 **During a model run:**
 
-- **n** – skip to next model (current run is marked “cut short by user” in results)
+- **n** – skip to next model (run is marked “cut short by user” in results; elapsed time, estimated token count, and speed are still recorded)
 - **p** – pause the display (freeze output so you can read); press **p** again to resume
 
 **During the delay between models:**
@@ -77,7 +77,7 @@ python -m ollama_mgr.cli run
 - **n** – skip the delay and start the next model
 - **p** – pause the countdown; **p** again to resume
 
-The results table is sorted by status (passed first), then speed, then tokens. At the end you can select which failed models to delete (checkboxes) and choose whether to run again.
+The results table is sorted by status (passed first), then speed, then tokens. When you skip a model with **n**, its row shows “(cut short by user)” and token count is shown as estimated “(est.)” if the API didn’t send a final count. At the end you can select which failed models to delete (checkboxes) and choose whether to run again.
 
 ### Benchmark all models and show report
 
@@ -129,3 +129,4 @@ Use this to decide which models to prune, then run `prune` with those names.
 - **Vision/image models** – Support for images or files as input (see TODOs in code).
 - **SQLite storage** – Retain all run results in SQLite for later recall and display.
 - **Turn-based chat** – Chat between models: choose one or more models, give each an initial prompt, then have them send responses to each other in turns.
+- **Markdown when scrolling** – Keep full Markdown rendering when output scrolls off screen (e.g. truncate at safe block boundaries or use a scrollable view instead of plain-text fallback for the last N lines).

@@ -151,14 +151,21 @@ def _ask_run_again() -> bool:
 def _model_output_renderable(
     raw_text: str,
     max_lines: int = 20,
-) -> Markdown:
-    """Detect and render model output as Markdown: code blocks, **bold**, *italic*, lists, etc."""
+):
+    """Render model output as Markdown when full; truncated excerpt as plain text (compromise until TODO)."""
     if not raw_text:
         return Markdown("")
     lines = raw_text.splitlines()
     if len(lines) > max_lines:
+        # TODO(future): Maintain Markdown rendering when content scrolls off screen. Currently we
+        # show the last N lines as plain text to avoid broken formatting from truncating mid-block
+        # (e.g. cutting inside a code fence or list). Desired: truncate at safe boundaries or use
+        # a scrollable view so the visible window still renders as Markdown correctly.
         excerpt = "\n".join(lines[-max_lines:])
-        return Markdown("…\n\n" + excerpt)
+        return Group(
+            Text("…\n\n", style="dim"),
+            Text(excerpt, style="white"),
+        )
     return Markdown(raw_text)
 
 
@@ -491,6 +498,8 @@ def _write_run_report(
         lines.append(f"| Status | {status} |")
         lines.append(f"| Time | {_format_duration(r.elapsed_seconds)} |")
         tokens = str(r.tokens_generated) if r.tokens_generated else "—"
+        if getattr(r, "cut_short_by_user", False) and r.tokens_generated:
+            tokens += " (est.)"
         lines.append(f"| Tokens | {tokens} |")
         speed = f"{r.tokens_per_second:.1f} tok/s" if r.tokens_per_second else "—"
         lines.append(f"| Speed | {speed} |")
@@ -704,6 +713,8 @@ def print_results_table(
                 status = "[green]✓ OK[/] [dim](cut short by user)[/]"
             time_str = _format_duration(r.elapsed_seconds)
             tokens_str = str(r.tokens_generated) if r.tokens_generated else "—"
+            if getattr(r, "cut_short_by_user", False) and r.tokens_generated:
+                tokens_str += " [dim](est.)[/]"
             speed_str = (
                 f"{r.tokens_per_second:.1f} tok/s" if r.tokens_per_second else "—"
             )

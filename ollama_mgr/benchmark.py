@@ -80,6 +80,13 @@ def _consume_stream_into_holder(
         holder["elapsed_seconds"] = time.perf_counter() - start
 
 
+def _estimate_tokens_from_text(text: str) -> int:
+    """Rough token estimate when API didn't return eval_count (e.g. stream cut short). ~4 chars/token is a common heuristic."""
+    if not text or not text.strip():
+        return 0
+    return max(0, len(text) // 4)
+
+
 def _model_result_from_stream_holder(model_name: str, holder: dict) -> ModelResult:
     """Build ModelResult from a holder populated by _consume_stream_into_holder."""
     elapsed = holder.get("elapsed_seconds") or 0
@@ -92,6 +99,11 @@ def _model_result_from_stream_holder(model_name: str, holder: dict) -> ModelResu
         )
     eval_duration = holder.get("eval_duration")
     tokens = holder.get("tokens") or 0
+    response_text = holder.get("response_text") or ""
+    cut_short = holder.get("cut_short_by_user", False)
+    # When cut short, API often never sends final chunk with eval_count/eval_duration; keep benchmark by estimating tokens from text
+    if cut_short and tokens == 0 and response_text:
+        tokens = _estimate_tokens_from_text(response_text)
     tps = None
     if eval_duration and eval_duration > 0 and tokens > 0:
         tps = tokens / eval_duration
@@ -104,8 +116,8 @@ def _model_result_from_stream_holder(model_name: str, holder: dict) -> ModelResu
         eval_duration_seconds=round(eval_duration, 2) if eval_duration else None,
         tokens_generated=tokens,
         tokens_per_second=round(tps, 2) if tps is not None else None,
-        response_text=holder.get("response_text") or None,
-        cut_short_by_user=holder.get("cut_short_by_user", False),
+        response_text=response_text or None,
+        cut_short_by_user=cut_short,
     )
 
 
