@@ -11,6 +11,7 @@ from .benchmark import ModelResult, run_all_benchmarks
 from .report import format_report
 from .prune import prune_models
 from .interactive import cmd_run_interactive, DEFAULT_RUN_PROMPT
+from .chat import cmd_turn_chat, DEFAULT_INITIAL_PROMPT, DEFAULT_EXCHANGES, DEFAULT_TIMEOUT_SECONDS
 
 
 def cmd_check(client: OllamaClient) -> int:
@@ -82,7 +83,7 @@ def cmd_prune(client: OllamaClient, model_names: list[str]) -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Ollama model manager: check, list, benchmark, report, prune")
+    ap = argparse.ArgumentParser(description="Ollama model manager: check, list, benchmark, run, chat, prune")
     ap.add_argument("--base-url", default="http://localhost:11434", help="Ollama API base URL")
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("check", help="Check if Ollama is running")
@@ -126,6 +127,40 @@ def main() -> int:
     pr = sub.add_parser("prune", help="Delete (prune) models by name")
     pr.add_argument("model_names", nargs="*", metavar="MODEL", help="Model names to delete")
     pr.add_argument("--models", "-m", metavar="LIST", help="Comma-separated model names")
+    cp = sub.add_parser(
+        "chat",
+        help="Turn-based chat: two models debate each other in a split-view UI",
+    )
+    cp.add_argument(
+        "--player1", "-1",
+        metavar="MODEL",
+        help="Player 1 model name (left panel); if omitted, you will be prompted",
+    )
+    cp.add_argument(
+        "--player2", "-2",
+        metavar="MODEL",
+        help="Player 2 model name (right panel); if omitted, you will be prompted",
+    )
+    cp.add_argument(
+        "--prompt",
+        default=None,
+        metavar="PROMPT",
+        help="Initial prompt to start the conversation; if omitted, you will be prompted",
+    )
+    cp.add_argument(
+        "--exchanges", "-e",
+        type=int,
+        default=DEFAULT_EXCHANGES,
+        metavar="N",
+        help=f"Number of exchanges (turns per model, default: {DEFAULT_EXCHANGES})",
+    )
+    cp.add_argument(
+        "--timeout", "-t",
+        type=int,
+        default=DEFAULT_TIMEOUT_SECONDS,
+        metavar="SECONDS",
+        help=f"Timeout in seconds (default: {DEFAULT_TIMEOUT_SECONDS} = 1 hour)",
+    )
     args = ap.parse_args()
     client = OllamaClient(base_url=args.base_url)
     if args.command == "check":
@@ -160,6 +195,15 @@ def main() -> int:
             print("No model names given. Use: prune MODEL [MODEL ...] or --models a,b,c", file=sys.stderr)
             return 1
         return cmd_prune(client, names)
+    if args.command == "chat":
+        return cmd_turn_chat(
+            client,
+            player1=getattr(args, "player1", None),
+            player2=getattr(args, "player2", None),
+            prompt=getattr(args, "prompt", None),
+            exchanges=getattr(args, "exchanges", DEFAULT_EXCHANGES),
+            timeout=getattr(args, "timeout", DEFAULT_TIMEOUT_SECONDS),
+        )
     return 0
 
 

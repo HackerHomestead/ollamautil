@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Turn-based chat (`chat`)** – Two models debate each other in a split-view UI with live streaming output. Select Player 1 (left) and Player 2 (right) models interactively or via CLI flags. Each model's response feeds into the other's next turn.
+  - Split-view panel showing both models' responses side-by-side
+  - `--player1` / `-1` and `--player2` / `-2` for model selection
+  - `--prompt` for initial prompt (or prompted if omitted)
+  - `--exchanges` / `-e` for number of turns per model (default: 5)
+  - `--timeout` / `-t` for timeout in seconds (default: 3600 = 1 hour)
+  - Controls: **p** = pause/resume, **s** = skip next turn, **q** = quit
+  - Chat logs saved to `/tmp` with timestamps relative to session start
+  - After session: option to summarize with another model (select model + custom prompt like "Who won this debate?")
 - **Chat API support** – Added `chat()` method to `OllamaClient` for chat completion. The `generate()` method now accepts `use_chat_api=True` to route prompts via `/api/chat` instead of `/api/generate`. Benchmark automatically detects models that need chat format (e.g., DeepSeek-R1) based on model name prefixes.
 - **Interactive run (`run`)**
   - Checkbox model selection; run one model at a time with live streaming output
@@ -32,5 +41,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Future:** Support for vision/image models (images or files as input) is planned; see TODOs in code.
 - **Future:** Use SQLite to retain all results for later recall and display.
-- **Future:** Turn-based chat between models: pick one or more models, give each an initial prompt, then have them send responses to each other in turns.
 - **Future:** Maintain Markdown rendering when output scrolls off screen (currently the last-N-lines window is shown as plain text to avoid broken formatting; goal is to truncate at safe boundaries or use a scrollable view so rendering stays correct).

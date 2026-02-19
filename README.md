@@ -8,6 +8,7 @@ A Python tool that interacts with the [Ollama](https://ollama.com) API to:
 - **Benchmark** every model (batch test + performance measure) with environment and `nvidia-smi` sampling
 - **Prune** (delete) models by name
 - **Chat API support** – Automatically uses `/api/chat` for models that expect chat-style input (e.g., DeepSeek-R1)
+- **Turn-based chat** – Two models debate each other in a split-view UI with live streaming, logging to `/tmp`
 
 Primary use case: test downloaded Ollama models, compare outputs and speed, and remove ones that fail or you no longer want.
 
@@ -109,6 +110,33 @@ python -m ollama_mgr.cli prune llama2:7b codellama
 python -m ollama_mgr.cli prune --models "llama2:7b,codellama"
 ```
 
+### Turn-based chat (two models debate)
+
+Two models take turns responding to each other in a split-view UI. Great for comparing how different models respond to the same conversation.
+
+```bash
+python -m ollama_mgr.cli chat
+```
+
+**Options:**
+
+- `--player1 MODEL` / `-1 MODEL` – Player 1 model (left panel); if omitted, you will be prompted
+- `--player2 MODEL` / `-2 MODEL` – Player 2 model (right panel); if omitted, you will be prompted
+- `--prompt "PROMPT"` – Initial prompt to start the conversation; if omitted, you will be prompted
+- `--exchanges N` / `-e N` – Number of turns each model has (default: 5)
+- `--timeout SECONDS` / `-t SECONDS` – Timeout in seconds (default: 3600 = 1 hour)
+
+**Controls during chat:**
+
+- **p** – pause/resume
+- **s** – skip to next turn
+- **q** – quit
+- **Enter** – submit partial turn (not yet implemented)
+
+Chat logs are saved to `/tmp` with timestamps relative to session start.
+
+After the session, you can optionally select another model to summarize the conversation (e.g., "Who won this debate?")
+
 ## Report contents
 
 **Interactive run report** (with `-o`):
@@ -129,5 +157,4 @@ Use this to decide which models to prune, then run `prune` with those names.
 
 - **Vision/image models** – Support for images or files as input (see TODOs in code).
 - **SQLite storage** – Retain all run results in SQLite for later recall and display.
-- **Turn-based chat** – Chat between models: choose one or more models, give each an initial prompt, then have them send responses to each other in turns.
 - **Markdown when scrolling** – Keep full Markdown rendering when output scrolls off screen (e.g. truncate at safe block boundaries or use a scrollable view instead of plain-text fallback for the last N lines).
