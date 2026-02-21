@@ -84,7 +84,9 @@ def cmd_prune(client: OllamaClient, model_names: list[str]) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Ollama model manager: check, list, benchmark, run, chat, prune")
-    ap.add_argument("--base-url", default="http://localhost:11434", help="Ollama API base URL")
+    ap.add_argument("--base-url", default=None, help="Ollama API base URL (e.g., http://localhost:11434)")
+    ap.add_argument("--ollama", metavar="HOST", default=None, help="Ollama host (IP or hostname)")
+    ap.add_argument("--port", type=int, default=11434, help="Ollama port (default: 11434)")
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("check", help="Check if Ollama is running")
     sub.add_parser("list", help="List all models")
@@ -162,7 +164,15 @@ def main() -> int:
         help=f"Timeout in seconds (default: {DEFAULT_TIMEOUT_SECONDS} = 1 hour)",
     )
     args = ap.parse_args()
-    client = OllamaClient(base_url=args.base_url)
+
+    if args.base_url:
+        base_url = args.base_url
+    elif args.ollama:
+        base_url = f"http://{args.ollama}:{args.port}"
+    else:
+        base_url = "http://localhost:11434"
+
+    client = OllamaClient(base_url=base_url)
     if args.command == "check":
         return cmd_check(client)
     if args.command == "list":

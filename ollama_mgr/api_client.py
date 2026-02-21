@@ -70,17 +70,73 @@ class OllamaClient:
         except requests.RequestException as e:
             return False, str(e), []
 
+    def chat(
+        self,
+        model: str,
+        messages: list[dict],
+        stream: bool = False,
+        options: Optional[dict] = None,
+    ) -> tuple[bool, Optional[str], Optional[dict], Optional[Generator[dict, None, None]]]:
+        """
+        Chat completion (POST /api/chat). Use for models that expect a message format.
+        messages: list of {"role": "user"|"assistant"|"system", "content": "..."}.
+        Yields/returns chunks with "response" (content delta) and eval_* so callers can reuse generate logic.
+        """
+        payload: dict = {"model": model, "messages": messages}
+        if options:
+            payload["options"] = options
+        try:
+            r = self._post("/api/chat", json=payload, stream=stream)
+            r.raise_for_status()
+            if stream:
+                def gen():
+                    for line in r.iter_lines():
+                        if line:
+                            obj = json.loads(line)
+                            msg = obj.get("message") or {}
+                            content = msg.get("content") if isinstance(msg, dict) else None
+                            out: dict = {}
+                            if isinstance(content, str):
+                                out["response"] = content
+                            if "eval_count" in obj:
+                                out["eval_count"] = obj["eval_count"]
+                            if "eval_duration" in obj:
+                                out["eval_duration"] = obj["eval_duration"]
+                            if out:
+                                yield out
+                return True, None, None, gen()
+            data = r.json()
+            msg = data.get("message") or {}
+            content = msg.get("content") if isinstance(msg, dict) else None
+            merged = {"response": content if isinstance(content, str) else ""}
+            for k in ("eval_count", "eval_duration"):
+                if k in data:
+                    merged[k] = data[k]
+            return True, None, merged, None
+        except requests.RequestException as e:
+            return False, str(e), None, None
+
     def generate(
         self,
         model: str,
         prompt: str,
         stream: bool = False,
         options: Optional[dict] = None,
+        use_chat_api: bool = False,
     ) -> tuple[bool, Optional[str], Optional[dict], Optional[Generator[dict, None, None]]]:
         """
-        Generate completion. If stream=False, returns (ok, err, response_json, None).
+        Generate completion. If use_chat_api=True, sends prompt as a user message via /api/chat
+        (for models like DeepSeek-R1 that expect chat format). Otherwise uses /api/generate.
+        If stream=False, returns (ok, err, response_json, None).
         If stream=True, returns (ok, err, None, stream_generator).
         """
+        if use_chat_api:
+            return self.chat(
+                model,
+                [{"role": "user", "content": prompt}],
+                stream=stream,
+                options=options,
+            )
         payload: dict = {"model": model, "prompt": prompt}
         if options:
             payload["options"] = options

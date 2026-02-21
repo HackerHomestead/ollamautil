@@ -12,6 +12,17 @@ from .system_info import NvidiaSmiSample, NvidiaSmiSampler
 # TODO(future): Support a set of images/files for vision/image models.
 DEFAULT_TEST_PROMPT = "Say exactly: OK"
 
+# Models that expect chat-style input (user/assistant messages). Ollama applies the right template via /api/chat.
+CHAT_API_MODEL_PREFIXES = ("deepseek-r1",)
+
+
+def _use_chat_api_for_model(model_name: str) -> bool:
+    """Return True if this model should be called via /api/chat so the prompt is formatted correctly."""
+    if not model_name:
+        return False
+    name = model_name.strip().lower()
+    return any(name.startswith(prefix) for prefix in CHAT_API_MODEL_PREFIXES)
+
 
 @dataclass
 class ModelResult:
@@ -44,7 +55,8 @@ def _consume_stream_into_holder(
     holder["error"] = None
     holder["cut_short_by_user"] = False
     try:
-        ok, err, _, stream = client.generate(model_name, prompt, stream=True)
+        use_chat = _use_chat_api_for_model(model_name)
+        ok, err, _, stream = client.generate(model_name, prompt, stream=True, use_chat_api=use_chat)
         if not ok:
             holder["error"] = err or "Unknown error"
             holder["done"] = True
@@ -129,7 +141,8 @@ def run_single_benchmark(
 ) -> ModelResult:
     """Run one model with the test prompt; return timing and token count."""
     start = time.perf_counter()
-    ok, err, data, _ = client.generate(model_name, prompt, stream=False)
+    use_chat = _use_chat_api_for_model(model_name)
+    ok, err, data, _ = client.generate(model_name, prompt, stream=False, use_chat_api=use_chat)
     elapsed = time.perf_counter() - start
     if not ok:
         return ModelResult(name=model_name, success=False, error=err, elapsed_seconds=elapsed)
