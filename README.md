@@ -1,6 +1,22 @@
 # Ollama Model Manager
 
-A Python tool that interacts with the [Ollama](https://ollama.com) API to:
+A comprehensive CLI tool for managing [Ollama](https://ollama.com) models, available in both Python and Go implementations.
+
+## 🚀 Go Version (Recommended)
+
+**NEW!** A complete Go rewrite is now available in the `ollama-util-go/` directory, offering significant improvements:
+
+- **10x+ faster startup** - No Python interpreter or virtual environment needed
+- **Single binary deployment** - No dependency management
+- **Better performance** - Lower memory usage and faster execution  
+- **Cross-platform builds** - Easy distribution for Linux, macOS, and Windows
+- **Type safety** - Compile-time error checking and robust error handling
+
+👉 **[See the Go version README](ollama-util-go/README.md)** for installation and usage instructions.
+
+## Python Version (Original)
+
+The original Python implementation that interacts with the Ollama API to:
 
 - **Check** that Ollama is running
 - **List** all installed models
@@ -11,7 +27,17 @@ A Python tool that interacts with the [Ollama](https://ollama.com) API to:
 
 Primary use case: test downloaded Ollama models, compare outputs and speed, and remove ones that fail or you no longer want.
 
-## Requirements
+## Quick Start (Go Version)
+
+```bash
+cd ollama-util-go
+make build
+./ollama-util check
+./ollama-util list
+./ollama-util run --models "phi3:latest" --prompt "Say exactly: OK"
+```
+
+## Python Version Requirements
 
 - Python 3.9+
 - [Ollama](https://ollama.com) installed and running (e.g. `ollama serve`)
